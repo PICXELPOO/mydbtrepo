@@ -1,0 +1,10 @@
+{{ config(materialized='table',
+    alias="EMP_NO_DUPS",
+  pre_hook=["Insert into curated_data.audit_tbl select 'unique records model','started',current_timestamp :: timestamp_ntz"],
+  post_hook=["insert into curated_data.audit_tbl select 'unique records model','completed',current_timestamp :: timestamp_ntz",
+             "GRANT SELECT ON TABLE curated_data.EMP_NO_DUPS TO ROLE ROLE_REPORTING"]
+) }}
+
+select *
+from raw_data.emp_stg
+qualify row_number() over (partition by empid order by inserted_at desc) = 1
